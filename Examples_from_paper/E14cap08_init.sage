@@ -1,0 +1,37 @@
+#Divisors are in Matrix form the (i,j)-th entry is the coefficient of (i,j)
+DivX = [[-1,0,-1,0,1,0,1,0]]+7*[[0,0,0,0,0,0,0,0]]
+DivY = [[-1 ,0 ,1 ,0 ,1 ,0 ,-1,0 ]]+7*[[0,0,0,0,0,0,0,0]]
+
+DivZ = [[0,-4,6,-4,2,0,0,0]]+7*[[0,0,0,0,0,0,0,0]]
+
+bet = mu(DivY,DivY,8)
+
+ProdD = EisensteinSymbol(0,1,8,tensorprod(DivZ, bet, 8));
+
+ProdD*= 4*8/3
+#The factor 4 = N/2 comes from converting s to an Eisenstein symbol and the factor 8/3 = N/3 comes from converting bet to an Eisenstein symbol
+
+#The next bit is explained in the paper, E = eta'
+m1 = Matrix([[0,-1],[1,-2]]); m2 = Matrix([[-1,0],[-2,-1]]); m3 = Matrix([[0,-1],[1,0]])
+E8 = ProdD.apply_matrix(m1) + 2*ProdD.apply_matrix(m2) + (-1)* ProdD.apply_matrix(m3)
+E8.clean_phi()
+
+print E8
+
+print 'Integrating E over X{0,\infty}'
+res = E8.integrate(prec = 44*8, short_form = 8)
+print 'Result:', res
+print 'Setting up matrix with coefficients of modular forms of level 8'
+f = Newforms(Gamma1(8),3)[0]
+chi0, chi1,chi2= DirichletGroup(1)[0], DirichletGroup(4)[1], DirichletGroup(8)[3]
+f1 = eis_phipsi(chi0,chi1,3, prec = 44).padded_list();
+f2 = eis_phipsi(chi0,chi1,3, t=2, prec = 44).padded_list();
+f3 = eis_phipsi(chi0,chi2,3, prec = 44).padded_list();
+f4 = eis_phipsi(chi1,chi0,3, prec = 44).padded_list();
+f5 = eis_phipsi(chi1,chi0,3, t=2, prec = 44).padded_list();
+f6 = eis_phipsi(chi2,chi0,3, prec = 44).padded_list();
+L8 = [f1,f2,f3,f4,f5,f6, [0]+f.coefficients(43)]; L8 = Matrix(L8)
+
+print 'Resulting modular form as a vector in the basis'
+x8 = L8.T \vector(res)
+print 'Mahler measure is the L-value at s=0  of the modular form', -1/(4*pi^2)*E8.pre_factor()*x8
