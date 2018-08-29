@@ -1,5 +1,15 @@
 load('sl2_operations.py')
 
+def is_gamma_N_equiv(x,y,N):
+    #Checks if two cusps a and b are equivalent under Gamma(N)
+    a,b,c,d = x.numerator(), x.denominator(), y.numerator(), y.denominator()
+    if a%N == c%N and b%N == d%N:
+        return True
+    elif a%N == (-c)%N and b%N == (-d)%N:
+        return True
+    else:
+        return False
+
 def order_of_siegel_unit(a,b,N, cusp = Cusp(Infinity)):
     r"""
     Calculates the absolute order of a Siegel unit on Gamma(N) at a cusp.
@@ -59,7 +69,7 @@ def find_siegel_unit_rep(div, group=None):
     r"""
         INPUT:
             div - a divisor of the cusps of the congruence group, the cusps should be ordered just as in group.cusps(). Note that we take orders with respect to the local coordinate corresponding to q at infinity, i.e., a simple zero at a cusp c of width d corresponds to the term 1/d * (c) in the divisor.
-            group - a congruence subgroup of the form GammaH
+            group - a congruence subgroup of the form GammaH or Gamma(N)
         OUTPUT: Exponents of the Siegel units needed to obtain this divisor
 
         EXAMPLES:
@@ -102,12 +112,15 @@ def find_siegel_unit_rep(div, group=None):
     N = group.level()
     C = group.cusps()
     C_GammaN = Gamma(N).cusps()
-    #We convert the divisor to a divisor for Gamma(N)
-    div_GammaN = zero_vector(QQ,len(C_GammaN))
-    for i in range(len(C_GammaN)):
-        for j in range(len(C)):
-            if C_GammaN[i].is_gamma_h_equiv(C[j],group)[0]:
-                div_GammaN[i] += div[j]
+    #We pull the divisor back to a divisor for Gamma(N)
+    if group == Gamma(N):
+        div_GammaN = div
+    else:
+        div_GammaN = zero_vector(QQ,len(C_GammaN))
+        for i in range(len(C_GammaN)):
+            for j in range(len(C)):
+                if C_GammaN[i].is_gamma_h_equiv(C[j],group)[0]:
+                    div_GammaN[i] += div[j]
     mat = siegel_unit_divisor_matrix(Gamma(N))
     d = mat.denominator()
     matZZ = Matrix(ZZ,d*mat)
